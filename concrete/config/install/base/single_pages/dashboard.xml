@@ -253,19 +253,6 @@
             </attributes>
         </page>
 
-
-        <page name="Data Pool" path="/dashboard/boards/pool" filename="/dashboard/boards/pool.php" pagetype=""
-              description="" package="">
-            <attributes>
-                <attributekey handle="exclude_nav">
-                    <value><![CDATA[1]]></value>
-                </attributekey>
-                <attributekey handle="exclude_search_index">
-                    <value><![CDATA[1]]></value>
-                </attributekey>
-            </attributes>
-        </page>
-
         <page name="Board Permissions" path="/dashboard/boards/permissions" filename="/dashboard/boards/permissions.php" pagetype=""
               description="" package="">
             <attributes>
@@ -290,6 +277,17 @@
             </attributes>
         </page>
 
+        <page name="Instance Details" path="/dashboard/boards/instances/details" filename="/dashboard/boards/instances/details.php" pagetype=""
+              description="View details of your board instance." package="">
+            <attributes>
+                <attributekey handle="exclude_nav">
+                    <value><![CDATA[1]]></value>
+                </attributekey>
+                <attributekey handle="exclude_search_index">
+                    <value><![CDATA[1]]></value>
+                </attributekey>
+            </attributes>
+        </page>
 
         <page name="Reports" path="/dashboard/reports" filename="/dashboard/reports.php" pagetype=""
               description="Get data from forms and logs." package="">
@@ -835,16 +833,6 @@
                 </attributekey>
             </attributes>
         </page>
-        <!--
-        <page name="Statistics" path="/dashboard/system/seo/statistics" filename="/dashboard/system/seo/statistics.php"
-              pagetype="" description="" package="">
-            <attributes>
-                <attributekey handle="meta_keywords">
-                    <value>turn off statistics, tracking, statistics, pageviews, hits</value>
-                </attributekey>
-            </attributes>
-        </page>
-        //-->
         <page name="Search Index" path="/dashboard/system/seo/searchindex"
               filename="/dashboard/system/seo/searchindex.php" pagetype="" description="" package="">
             <attributes>

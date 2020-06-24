@@ -7,7 +7,8 @@ mix.webpackConfig({
         symlinks: false
     },
     externals: {
-        jquery: 'jQuery'
+        jquery: 'jQuery',
+        vue: 'Vue'
     }
 });
 mix.options({
@@ -18,6 +19,11 @@ mix.setPublicPath('../concrete');
 /**
  * Copy pre-minified assets.
  */
+if (mix.inProduction()) {
+    mix.copy('node_modules/vue/dist/vue.min.js', '../concrete/js/vue.js');
+} else {
+    mix.copy('node_modules/vue/dist/vue.js', '../concrete/js/vue.js');
+}
 mix.copy('node_modules/jquery/dist/jquery.min.js', '../concrete/js/jquery.js');
 mix.copy('node_modules/@fortawesome/fontawesome-free/webfonts', '../concrete/css/webfonts');
 mix.copy('node_modules/@fortawesome/fontawesome-free/css/all.css', '../concrete/css/fontawesome/all.css');
@@ -118,6 +124,10 @@ mix
 mix
     .sass('node_modules/@concretecms/bedrock/assets/polls/scss/frontend.scss', 'css/features/polls/frontend.css')
 
+/**
+ * Copy bedrock SVGs into our repository
+ */
+mix.copy('node_modules/@concretecms/bedrock/assets/icons/sprites.svg', '../concrete/images/icons/bedrock/sprites.svg');
 
 /**
  * Turn off notifications
@@ -126,4 +136,8 @@ mix
     .disableNotifications()
     .options({
         clearConsole: false,
+        // Disable extracting licenses from comments
+        terser: {
+            extractComments: false,
+        }
     })

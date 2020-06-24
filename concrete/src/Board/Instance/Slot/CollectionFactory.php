@@ -1,48 +1,36 @@
 <?php
 namespace Concrete\Core\Board\Instance\Slot;
 
-use Concrete\Core\Board\Instance\ItemSegmenter;
-use Concrete\Core\Board\Instance\Slot\Content\ContentPopulator;
-use Concrete\Core\Board\Instance\Slot\Content\ItemObjectGroup;
+use Concrete\Core\Board\Instance\Slot\Content\ObjectInterface;
+use Concrete\Core\Board\Instance\Slot\Template\AvailableTemplateCollection;
+use Concrete\Core\Board\Instance\Slot\Template\AvailableTemplateCollectionFactory;
 use Concrete\Core\Entity\Board\Instance;
 use Concrete\Core\Entity\Board\InstanceSlot;
 use Concrete\Core\Entity\Board\SlotTemplate;
+use Concrete\Core\Logging\Channels;
+use Concrete\Core\Logging\LoggerAwareInterface;
+use Concrete\Core\Logging\LoggerAwareTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
 
-class CollectionFactory
+class CollectionFactory implements LoggerAwareInterface
 {
-    
-    /**
-     * @var EntityManager 
-     */
-    protected $entityManager;
 
-    /**
-     * @var ItemSegmenter 
-     */
-    protected $itemSegmenter;
+    use LoggerAwareTrait;
 
-    /**
-     * @var ContentPopulator 
-     */
-    protected $contentPopulator;
-
-    /**
-     * @var SlotPopulator 
-     */
-    protected $slotPopulator;
-    
-    public function __construct(
-        EntityManager $entityManager,
-        ItemSegmenter $itemSegmenter,
-        ContentPopulator $contentPopulator,
-        SlotPopulator $slotPopulator)
+    public function getLoggerChannel()
     {
-        $this->entityManager = $entityManager;
-        $this->itemSegmenter = $itemSegmenter;
-        $this->contentPopulator = $contentPopulator;
-        $this->slotPopulator = $slotPopulator;
+        Channels::CHANNEL_CONTENT;
+    }
+
+    /**
+     * @var AvailableTemplateCollectionFactory
+     */
+    protected $availableTemplateCollectionFactory;
+
+    public function __construct(AvailableTemplateCollectionFactory $availableTemplateCollectionFactory)
+    {
+        $this->availableTemplateCollectionFactory = $availableTemplateCollectionFactory;
     }
 
     /**
@@ -51,24 +39,9 @@ class CollectionFactory
      * @param int $slot
      * @return SlotTemplate
      */
-    protected function getTemplateForSlot($availableTemplates, Instance $instance, int $slot, int $totalItemsRemaining)
+    protected function getTemplateForSlot($filteredTemplates, int $totalItemsRemaining)
     {
-        $availableTemplatesByFormFactor = [];
-        foreach($availableTemplates as $availableTemplate) {
-            $availableTemplatesByFormFactor[$availableTemplate->getFormFactor()][] = $availableTemplate;
-        }
-
-        $driver = $instance->getBoard()->getTemplate()->getDriver();
-        $formFactor = $driver->getFormFactor();
-        if (is_array($formFactor)) {
-            $formFactor = $formFactor[$slot];
-        } else {
-            $formFactor = $driver->getFormFactor();
-        }
-        
-        $filteredTemplates = $availableTemplatesByFormFactor[$formFactor];
         shuffle($filteredTemplates);
-        
         foreach($filteredTemplates as $filteredTemplate) {
             if ($filteredTemplate->getDriver()->getTotalContentSlots() <= $totalItemsRemaining) {
                 return $filteredTemplate;
@@ -78,54 +51,35 @@ class CollectionFactory
 
     /**
      * @param Instance $instance
-     * @param ItemObjectGroup[] $contentObjectGroups
+     * @param ObjectInterface[] $items
      * @return ArrayCollection
      */
-    public function createSlotCollection(Instance $instance) : ArrayCollection
+    public function createSlotCollection(Instance $instance, array $contentObjectGroups) : ArrayCollection
     {
-
-        // Let's create items from our data sources to put into our board.
-        $items = $this->itemSegmenter->getBoardItemsForInstance($instance);
-
-        // Now that we have items, let's create a pool of content objects.
-        $contentObjectGroups = $this->contentPopulator->createContentObjects($items);
-        
-        $board = $instance->getBoard();
-        if ($board->hasCustomSlotTemplates()) {
-            $availableTemplates = $board->getCustomSlotTemplates();
-        } else {
-            $availableTemplates = $this->entityManager->getRepository(SlotTemplate::class)->findAll();
-        }
-
         $collection = new ArrayCollection();
-        $driver = $board->getTemplate()->getDriver();
-        $slots = $driver->getTotalSlots();
-
         $totalItemsRemaining = count($contentObjectGroups);
-        
-        for ($i = 1; $i <= $slots; $i++) {
-            $template = $this->getTemplateForSlot($availableTemplates, $instance, $i, $totalItemsRemaining);
+        $currentSlot = 1;
+        while($totalItemsRemaining > 0) {
+            $availableTemplates = $this->availableTemplateCollectionFactory->getAvailableTemplates($instance, $currentSlot);
+            $template = $this->getTemplateForSlot($availableTemplates, $totalItemsRemaining);
             if ($template) {
                 $slot = new InstanceSlot();
-                $slot->setSlot($i);
+                $slot->setSlot($currentSlot);
                 $slot->setInstance($instance);
                 $slot->setTemplate($template);
-
-                $this->entityManager->persist($slot);
 
                 $collection->add($slot);
 
                 $templateContentSlots = $template->getDriver()->getTotalContentSlots();
                 $totalItemsRemaining -= $templateContentSlots;
-            }
-            if ($totalItemsRemaining <= 0) {
-                break;
-            }
-        }
-        
-        $this->entityManager->flush(); // need to do this here so our instance slots have IDs.
 
-        $this->slotPopulator->populateSlotCollectionWithContent($contentObjectGroups, $collection);
+                $this->logger->debug(t('Instance slot added to slot %s with template %s - items remaining %s',
+                    $currentSlot, $template->getName(), $totalItemsRemaining
+                ));
+
+            }
+            $currentSlot++;
+        }
 
         return $collection;
     }
