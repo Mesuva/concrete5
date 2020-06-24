@@ -17,6 +17,7 @@ use Concrete\Core\Localization\Localization;
 use Concrete\Core\Localization\Service\TranslationsInstaller;
 use Concrete\Core\Localization\Translation\Remote\ProviderInterface as RemoteTranslationsProvider;
 use Concrete\Core\Url\Resolver\Manager\ResolverManagerInterface;
+use Concrete\Core\Url\UrlImmutable;
 use Concrete\Core\View\View;
 use Exception;
 use Punic\Comparer as PunicComparer;
@@ -77,7 +78,7 @@ class Install extends Controller
     {
         $v = new View('/frontend/install');
         $v->setViewTheme('concrete');
-
+        $v->setViewTemplate('background_image.php');
         return $v;
     }
 
@@ -88,18 +89,11 @@ class Install extends Controller
      */
     public function on_start()
     {
-        $this->addHeaderItem('<link href="' . ASSETS_URL_CSS . '/views/install.css" rel="stylesheet" type="text/css" media="all" />');
-        $this->requireAsset('core/app');
-        $this->requireAsset('javascript', 'backstretch');
-        $this->requireAsset('javascript', 'bootstrap/collapse');
         $this->set('urlResolver', $this->app->make(ResolverManagerInterface::class));
 
         $config = $this->app->make('config');
-        $this->set('backgroundFade', 0);
         $this->set('pageTitle', t('Install concrete5'));
         $image = date('Ymd') . '.jpg';
-        $this->set('image', date('Ymd') . '.jpg');
-        $this->set('imagePath', $config->get('concrete.urls.background_feed') . '/' . $image);
         $this->set('concreteVersion', $config->get('concrete.version'));
 
         $locale = $this->request->request->get('locale');
@@ -116,7 +110,6 @@ class Install extends Controller
 
     public function view()
     {
-        $this->set('backgroundFade', 500);
         if ($this->getInstallerOptions()->hasConfigurationFiles()) {
             $this->testAndRunInstall();
         } else {
@@ -201,13 +194,13 @@ class Install extends Controller
         if (preg_match('/^(https?)(:.+?)(?:\/' . preg_quote(DISPATCHER_FILENAME, '%') . ')?\/install(?:$|\/|\?)/i', $uri, $m)) {
             switch (strtolower($m[1])) {
                 case 'http':
-                    $canonicalUrl = 'http' . rtrim($m[2], '/');
-                    $canonicalUrlAlternative = 'https' . rtrim($m[2], '/');
+                    $canonicalUrl = (string) UrlImmutable::createFromUrl('http' . $m[2]);
+                    $canonicalUrlAlternative = (string) UrlImmutable::createFromUrl('https' . $m[2]);
                     //$canonicalUrlChecked = true;
                     break;
                 case 'https':
-                    $canonicalUrl = 'https' . rtrim($m[2], '/');
-                    $canonicalUrlAlternative = 'http' . rtrim($m[2], '/');
+                    $canonicalUrl = (string) UrlImmutable::createFromUrl('https' . $m[2]);
+                    $canonicalUrlAlternative = (string) UrlImmutable::createFromUrl('http' . $m[2]);
                     //$canonicalUrlChecked = true;
                     break;
             }
@@ -500,7 +493,6 @@ class Install extends Controller
         if ($e->has()) {
             $this->set('error', $e);
         } else {
-            $this->set('backgroundFade', 0);
             $spl = $this->getInstaller()->getStartingPoint(true);
             $this->set('installPackage', $spl->getPackageHandle());
             $this->set('installRoutines', $spl->getInstallRoutines());

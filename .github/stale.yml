@@ -1,13 +1,14 @@
 # Number of days of inactivity before an issue becomes stale
 daysUntilStale: 180
-# Number of days of inactivity before a stale issue is closed (Reduce this once we're happy with the things that will close)
-daysUntilClose: 100000
+# Number of days of inactivity before a stale issue is closed
+daysUntilClose: 30
 # Issues with these labels will never be considered stale
 exemptLabels:
-  - Status:In Progress
-  - Status:On Hold
-  - Status:Proposal
-  - Status:Ready to Merge
+  - "Status:In Progress"
+  - "Status:On Hold"
+  - "Status:Proposal"
+  - "Status:Ready to Merge"
+  - "Status:Available"
 # Label to use when marking an issue as stale
 staleLabel: Stale
 # Comment to post when marking an issue as stale. Set to `false` to disable

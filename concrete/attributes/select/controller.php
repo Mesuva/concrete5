@@ -219,7 +219,6 @@ class Controller extends AttributeTypeController implements SimpleTextExportable
         }
         $this->set('selectedOptionIDs', $selectedOptionIDs);
         $this->set('selectedOptions', $selectedOptions);
-        $this->requireAsset('selectize');
     }
 
     public function search()
@@ -593,16 +592,16 @@ EOT
             $option = $em->getRepository('\Concrete\Core\Entity\Attribute\Value\Value\SelectValueOption')
                 ->findOneByValue($value);
         }
-        if (is_object($option)) {
-            $column = 'ak_' . $this->attributeKey->getAttributeKeyHandle();
-            $qb = $list->getQueryObject();
-            $qb->andWhere(
-                $comparison === '!=' || $comparison === '<>'
-                    ? $qb->expr()->notLike($column, ':optionValue_' . $this->attributeKey->getAttributeKeyID())
-                    : $qb->expr()->like($column, ':optionValue_' . $this->attributeKey->getAttributeKeyID())
-            );
-            $qb->setParameter('optionValue_' . $this->attributeKey->getAttributeKeyID(), "%\n" . $option->getSelectAttributeOptionValue(false) . "\n%");
-        }
+
+        $optionValue = is_object($option) ? $option->getSelectAttributeOptionValue(false) : $value;
+        $column = 'ak_' . $this->attributeKey->getAttributeKeyHandle();
+        $qb = $list->getQueryObject();
+        $qb->andWhere(
+            $comparison === '!=' || $comparison === '<>'
+                ? $qb->expr()->notLike($column, ':optionValue_' . $this->attributeKey->getAttributeKeyID())
+                : $qb->expr()->like($column, ':optionValue_' . $this->attributeKey->getAttributeKeyID())
+        );
+        $qb->setParameter('optionValue_' . $this->attributeKey->getAttributeKeyID(), "%\n" . $optionValue . "\n%");
     }
 
     /**

@@ -6,10 +6,10 @@ return [
      *
      * @var string
      */
-    'version' => '8.6.0a3',
-    'version_installed' => '8.6.0a3',
-    'version_db' => '20191002000000', // the key of the latest database migration
- 
+    'version' => '9.0.0a2',
+    'version_installed' => '9.0.0a2',
+    'version_db' => '20200609145307', // the key of the latest database migration
+
     /*
      * Installation status
      *
@@ -91,6 +91,12 @@ return [
         'extensions' => '*.flv;*.jpg;*.gif;*.jpeg;*.ico;*.docx;*.xla;*.png;*.psd;*.swf;*.doc;*.txt;*.xls;*.xlsx;' .
             '*.csv;*.pdf;*.tiff;*.rtf;*.m4a;*.mov;*.wmv;*.mpeg;*.mpg;*.wav;*.3gp;*.avi;*.m4v;*.mp4;*.mp3;*.qt;*.ppt;' .
             '*.pptx;*.kml;*.xml;*.svg;*.webm;*.ogg;*.ogv',
+        /*
+         * Disallowed file extension list (takes the precedence over the extensions whitelist).
+         *
+         * @var string semi-colon separated.
+         */
+        'extensions_blacklist' => '*.php;*.php2;*.php3;*.php4;*.php5;*.php7;*.php8;*.phtml;*.phar;*.htaccess;*.pl;*.phpsh;*.pht;*.shtml;*.cgi',
 
         'chunking' => [
             // Enable uploading files in chunks?
@@ -110,6 +116,7 @@ return [
             // Include the BOM (byte-order mark) in generated CSV files?
             // @var bool
             'include_bom' => false,
+            'datetime_format' => 'ATOM',
         ],
     ],
 
@@ -179,13 +186,6 @@ return [
          * @var bool
          */
         'blocks' => true,
-
-        /*
-         * Cache Assets
-         *
-         * @var bool
-         */
-        'assets' => false,
 
         /*
          * Cache Theme CSS/JS
@@ -330,6 +330,66 @@ return [
         'enable_custom' => true,
         'enable_layouts' => true,
     ],
+
+    /*
+     * ------------------------------------------------------------------------
+     * Queue settings
+     * ------------------------------------------------------------------------
+     */
+    'queue' => [
+
+        /*
+         * Driver
+         *
+         * @var string (redis|database)
+         */
+        'driver' => 'database',
+
+
+        /*
+         * Default queue to use
+         *
+         * @var string
+         */
+        'default' => 'default',
+
+        /*
+         * If we're consuming the queue through polling, how many entries do we do at a time
+         *
+         * @var int
+         */
+        'polling_batch' => [
+            'default' => 10,
+            'rescan_file' => 5,
+            'delete_page' => 100,
+            'delete_page_forever' => 100,
+            'copy_page' => 10,
+        ],
+
+
+    ],
+
+    /*
+ * ------------------------------------------------------------------------
+ * Events settings
+ * ------------------------------------------------------------------------
+ */
+    'events' => [
+
+        'broadcast' => [
+
+            /*
+             * Driver
+             *
+             * @var string (redis|none)
+             */
+            'driver' => ''
+
+        ],
+
+
+    ],
+
 
     /*
      * ------------------------------------------------------------------------
@@ -574,7 +634,6 @@ return [
          * @var string (now|async)
          */
         'basic_thumbnailer_generation_strategy' => 'now',
-        'help_overlay' => true,
         'require_version_comments' => false,
         /*
          * Control whether a block type can me moved to different block type sets
@@ -631,13 +690,13 @@ return [
         ],
         'file_manager_listing' => [
             'handle' => 'file_manager_listing',
-            'width' => 60,
-            'height' => 60,
+            'width' => 120,
+            'height' => 120,
         ],
         'file_manager_detail' => [
             'handle' => 'file_manager_detail',
-            'width' => 400,
-            'height' => 400,
+            'width' => 500,
+            'height' => 500,
         ],
         'user_avatar' => [
             'width' => 80,
@@ -724,13 +783,6 @@ return [
          * @var bool
          */
         'toolbar_large_font' => false,
-
-        /*
-         * Show help system
-         *
-         * @var bool
-         */
-        'display_help_system' => true,
 
         /*
          * Show tooltips in the concrete5 toolbars
@@ -822,11 +874,20 @@ return [
         'name' => false,
 
         /*
-         * Background image url
+         * Controls how we show the background image on the login/other concrete pages. None = no image, Feed =
+         * standard behavior, "custom" = custom image.
          *
-         * @var null|string
+         * @var string "none"|"feed"|"custom"
          */
-        'background_image' => null,
+        'background_image' => 'feed',
+
+        /*
+         * If the background image is custom, this is where it loads from.
+         *
+         * @var null|string Custom URL for background image.
+         */
+        'background_url' => null,
+
     ],
     'session' => [
         'name' => 'CONCRETE5',
@@ -835,13 +896,22 @@ return [
             'database' => 1, // Use different Redis Databases - optional
         ],
         'save_path' => null,
+        // Minimum duration (in seconds) of an "unoutched" session
         'max_lifetime' => 7200,
+        // gc_probability and gc_divisor together define the probability to
+        // cleanup expided sessions ("garbage collection").
+        // Example: if gc_probability is 1 and gc_divisor is 100, on average we'll have 1 GC every 100 requests (1%)
+        // Example: if gc_probability is 5 and gc_divisor is 20, on average we'll have 1 GC every 20 requests (25%)
+        'gc_probability' => 1,
+        'gc_divisor' => 100,
         'cookie' => [
             'cookie_path' => false, // set a specific path here if you know it, otherwise it'll default to relative
             'cookie_lifetime' => 0,
             'cookie_domain' => false,
             'cookie_secure' => false,
             'cookie_httponly' => true,
+            'cookie_raw' => false,
+            'cookie_samesite' => null,
         ],
         'remember_me' => [
             'lifetime' => 1209600, // 2 weeks in seconds
@@ -1099,8 +1169,6 @@ return [
     ],
     'limits' => [
         'sitemap_pages' => 100,
-        'delete_pages' => 100,
-        'copy_pages' => 10,
         'page_search_index_batch' => 200,
         'job_queue_batch' => 10,
         'style_customizer' => [
@@ -1149,6 +1217,7 @@ return [
             'client_credentials' => true,
             'authorization_code' => true,
             'password_credentials' => false,
+            'refresh_token' => true,
         ],
     ],
 

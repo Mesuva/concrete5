@@ -38,8 +38,12 @@ class ImportExpressEntitiesRoutine extends AbstractRoutine
                 $entity->setHandle((string) $entityNode['handle']);
                 $entity->setDescription((string) $entityNode['description']);
                 $entity->setName((string) $entityNode['name']);
+                $entity->setPackage(static::getPackageObject($entityNode['package']));
                 if (((string) $entityNode['include_in_public_list']) == '') {
                     $entity->setIncludeInPublicList(false);
+                }
+                if (((string) $entityNode['use_separate_site_result_buckets']) === '1') {
+                    $entity->setUseSeparateSiteResultBuckets(true);
                 }
                 $entity->setHandle((string) $entityNode['handle']);
                 $em->persist($entity);

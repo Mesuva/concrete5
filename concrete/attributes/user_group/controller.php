@@ -294,7 +294,7 @@ class Controller extends AttributeTypeController
                 $u = $this->app->make(User::class);
                 if (!$u->isSuperUser()) {
                     if (!$u->inGroup($selectedGroup)) {
-                        $errorList->add(t('You must be a member of the group %s to add a customer to it.',
+                        $errorList->add(t('You must be a member of the group %s to add a user to it.',
                             $selectedGroup->getGroupPath()));
                     }
                 }
@@ -349,11 +349,13 @@ class Controller extends AttributeTypeController
          * @var UserGroupSettings
          */
         $ak = $this->getAttributeKey();
-        $settings = $ak->getAttributeKeySettings();
-        if ($settings) {
-            $this->akGroupSelectionMethod = $settings->getGroupSelectionMethod();
-            $this->akDisplayGroupsBeneathSpecificParent = $settings->displayGroupsBeneathSpecificParent();
-            $this->akDisplayGroupsBeneathParentID = $settings->getDisplayGroupsBeneathParentID();
+        if ($ak) {
+            $settings = $ak->getAttributeKeySettings();
+            if ($settings) {
+                $this->akGroupSelectionMethod = $settings->getGroupSelectionMethod();
+                $this->akDisplayGroupsBeneathSpecificParent = $settings->displayGroupsBeneathSpecificParent();
+                $this->akDisplayGroupsBeneathParentID = $settings->getDisplayGroupsBeneathParentID();
+            }
         }
     }
 

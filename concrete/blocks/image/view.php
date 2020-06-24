@@ -23,7 +23,7 @@ if (is_object($f) && $f->getFileID()) {
         $tag = $image->getTag();
     }
 
-    $tag->addClass('ccm-image-block img-responsive bID-' . $bID);
+    $tag->addClass('ccm-image-block img-fluid bID-' . $bID);
 
     if ($altText) {
         $tag->alt(h($altText));
@@ -36,16 +36,14 @@ if (is_object($f) && $f->getFileID()) {
     }
 
     if ($linkURL) {
-        echo '<a href="' . $linkURL . '" '. ($openLinkInNewWindow ? 'target="_blank" rel="noopener noreferrer"' : '') .'>';
+        echo '<a href="' . $linkURL . '" ' . ($openLinkInNewWindow ? 'target="_blank" rel="noopener noreferrer"' : '') . '>';
     }
 
     // add data attributes for hover effect
-    if (is_object($f) && is_object($foS)) {
-        if (($maxWidth > 0 || $maxHeight > 0) && !$f->getTypeObject()->isSVG() && !$foS->getTypeObject()->isSVG()) {
-            $tag->addClass('ccm-image-block-hover');
-            $tag->setAttribute('data-default-src', $imgPaths['default']);
-            $tag->setAttribute('data-hover-src', $imgPaths['hover']);
-        }
+    if (is_object($foS) && !$f->getTypeObject()->isSVG() && !$foS->getTypeObject()->isSVG()) {
+        $tag->addClass('ccm-image-block-hover');
+        $tag->setAttribute('data-default-src', $imgPaths['default']);
+        $tag->setAttribute('data-hover-src', $imgPaths['hover']);
     }
 
     echo $tag;
@@ -56,4 +54,23 @@ if (is_object($f) && $f->getFileID()) {
 } elseif ($c->isEditMode()) { ?>
     <div class="ccm-edit-mode-disabled-item"><?php echo t('Empty Image Block.'); ?></div>
 <?php
+}
+
+if (isset($foS) && $foS) { ?>
+
+    <script type="text/javascript">
+        var images = document.getElementsByClassName('ccm-image-block-hover');
+        for (var i = 0; i < images.length; i++) {
+            var image = images[i],
+                hoverSrc = image.getAttribute('data-hover-src'),
+                defaultSrc = image.getAttribute('data-default-src');
+            image.onmouseover = function() {
+                image.setAttribute('src', hoverSrc);
+            };
+            image.onmouseout = function() {
+                image.setAttribute('src', defaultSrc);
+            };
+        }
+    </script>
+<?php 
 }

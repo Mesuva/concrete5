@@ -309,8 +309,11 @@ class Login extends PageController implements LoggerAwareInterface
 
     public function view($type = null, $element = 'form')
     {
-        $this->requireAsset('javascript', 'backstretch');
         $this->set('authTypeParams', $this->getSets());
+
+        $user = $this->app->make(User::class);
+        $this->set('user', $user);
+
         if (strlen($type)) {
             try {
                 $at = AuthenticationType::getByHandle($type);
